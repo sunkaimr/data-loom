@@ -1,0 +1,3066 @@
+basePath: /data-loom/api/v1
+definitions:
+  common.CleaningSpeedType:
+    enum:
+    - steady
+    - balanced
+    - swift
+    - balanced
+    type: string
+    x-enum-comments:
+      CleaningSpeed: 速度优先
+      CleaningSpeedBalanced: 速度适中
+      CleaningSpeedSteady: 稳定优先
+    x-enum-varnames:
+    - CleaningSpeedSteady
+    - CleaningSpeedBalanced
+    - CleaningSpeed
+    - CleaningSpeedDefault
+  common.ClusterImportFromType:
+    enum:
+    - customized
+    type: string
+    x-enum-varnames:
+    - ImportFromCustomized
+  common.ClusterType:
+    enum:
+    - mysql
+    - ""
+    type: string
+    x-enum-varnames:
+    - ClusterTypeMysql
+    - ClusterTypeOther
+  common.GovernType:
+    enum:
+    - truncate
+    - delete
+    - backup-delete
+    - archive
+    - rebuild
+    type: string
+    x-enum-comments:
+      GovernTypeArchive: 归档数据
+      GovernTypeBackupDelete: 备份后删除
+      GovernTypeDelete: 删除数据
+      GovernTypeRebuild: 重建表
+      GovernTypeTruncate: 清空数据
+    x-enum-varnames:
+    - GovernTypeTruncate
+    - GovernTypeDelete
+    - GovernTypeBackupDelete
+    - GovernTypeArchive
+    - GovernTypeRebuild
+  common.NoticeType:
+    enum:
+    - email
+    type: string
+    x-enum-varnames:
+    - NoticeTypeEmail
+  common.NotifyPolicyType:
+    enum:
+    - silence
+    - success
+    - failed
+    - always
+    - always
+    type: string
+    x-enum-comments:
+      NotifyPolicyTypeAlways: 成功或失败都通知
+      NotifyPolicyTypeFailed: 失败时通知
+      NotifyPolicyTypeSilence: 不通知
+      NotifyPolicyTypeSuccess: 成功时通知
+    x-enum-varnames:
+    - NotifyPolicyTypeSilence
+    - NotifyPolicyTypeSuccess
+    - NotifyPolicyTypeFailed
+    - NotifyPolicyTypeAlways
+    - NotifyPolicyTypeDefault
+  common.PeriodType:
+    enum:
+    - once
+    - day
+    - two-day
+    - weekly
+    - two-week
+    - monthly
+    - quarterly
+    - six-months
+    - yearly
+    type: string
+    x-enum-comments:
+      PeriodDay: 每天
+      PeriodMonthly: 每月一次
+      PeriodOnce: 执行一次
+      PeriodQuarterly: 每季度一次
+      PeriodSixMonths: 每半年一次
+      PeriodTwoDay: 每二天一次
+      PeriodTwoWeeks: 两周一次
+      PeriodWeekly: 每周一次
+      PeriodYearly: 每年一次
+    x-enum-varnames:
+    - PeriodOnce
+    - PeriodDay
+    - PeriodTwoDay
+    - PeriodWeekly
+    - PeriodTwoWeeks
+    - PeriodMonthly
+    - PeriodQuarterly
+    - PeriodSixMonths
+    - PeriodYearly
+  common.Response:
+    properties:
+      code:
+        description: 返回码
+        type: integer
+      data:
+        description: 返回数据
+      error:
+        description: 错误信息
+        type: string
+      message:
+        description: 返回信息
+        type: string
+    type: object
+  common.StorageType:
+    enum:
+    - mysql
+    - databend
+    type: string
+    x-enum-varnames:
+    - StorageMysql
+    - StorageDataBend
+  common.TaskConflictLevelType:
+    enum:
+    - cluster
+    - database
+    - table
+    type: string
+    x-enum-comments:
+      TaskConflictLevelCluster: 集群级
+      TaskConflictLevelDatabase: 库级
+      TaskConflictLevelTable: 表级
+    x-enum-varnames:
+    - TaskConflictLevelCluster
+    - TaskConflictLevelDatabase
+    - TaskConflictLevelTable
+  common.TaskStatusType:
+    enum:
+    - scheduled
+    - supplement_failed
+    - waiting
+    - exec_check_failed
+    - executing
+    - success
+    - failed
+    - timeout
+    type: string
+    x-enum-comments:
+      TaskStatusExecCheckFailed: 执行前检查失败
+      TaskStatusExecFailed: 执行失败
+      TaskStatusExecuting: 执行中
+      TaskStatusScheduled: 已排期
+      TaskStatusSuccess: 执行成功
+      TaskStatusSupplementFailed: 填充任务信息失败
+      TaskStatusTimeout: 执行超时
+      TaskStatusWaiting: 等待执行
+    x-enum-varnames:
+    - TaskStatusScheduled
+    - TaskStatusSupplementFailed
+    - TaskStatusWaiting
+    - TaskStatusExecCheckFailed
+    - TaskStatusExecuting
+    - TaskStatusSuccess
+    - TaskStatusExecFailed
+    - TaskStatusTimeout
+  services.ClusterService:
+    properties:
+      bu:
+        description: bu
+        type: string
+      cluster_id:
+        description: 集群ID
+        type: string
+      cluster_name:
+        description: 集群名称
+        type: string
+      cluster_type:
+        allOf:
+        - $ref: '#/definitions/common.ClusterType'
+        description: 集群类型（mysql, 其他的）
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      description:
+        description: 说明
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      env:
+        description: 环境
+        type: string
+      id:
+        description: ID
+        type: integer
+      import_from:
+        allOf:
+        - $ref: '#/definitions/common.ClusterImportFromType'
+        description: 添加方式：customized:自定义添加 ipaas:从资源中心导入
+      password:
+        description: 密码
+        type: string
+      read_addr:
+        description: 读库地址 ip:port
+        type: string
+      service_addr:
+        description: 服务地址(vip) ip:port
+        type: string
+      updated_at:
+        description: 修改时间
+        type: string
+      user_name:
+        description: 用户名（若未提供用户名和密码则以全局的为准）
+        type: string
+      write_addr:
+        description: 写库地址 ip:port
+        type: string
+    type: object
+  services.ClusterStatistic:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/services.ClusterStatisticDetail'
+        type: array
+      end_date:
+        type: string
+      end_size:
+        type: string
+      start_date:
+        type: string
+      start_size:
+        type: string
+      total:
+        type: integer
+    type: object
+  services.ClusterStatisticDetail:
+    properties:
+      bu:
+        description: bu
+        type: string
+      cluster_id:
+        description: 集群ID
+        type: string
+      cluster_name:
+        description: 集群名称
+        type: string
+      database:
+        description: 库名
+        type: string
+      date:
+        description: 统计的日期
+        type: string
+      policies:
+        description: 对应的策略
+        type: string
+      policies_num:
+        description: 策略个数
+        type: integer
+      table:
+        description: 表名
+        type: string
+      table_size:
+        description: 表大小(GB)
+        type: integer
+      tables_num:
+        description: 大表个数
+        type: integer
+    type: object
+  services.ConfigService:
+    properties:
+      cluster_default_passwd:
+        description: 源端密码
+        type: string
+      cluster_default_user:
+        description: 源端用户名
+        type: string
+      cluster_exclude_database:
+        description: 源端库黑名单
+        type: string
+      cluster_exclude_tables:
+        description: 源端表黑名单
+        type: string
+      email_host:
+        type: string
+      email_insecure_skip_verify:
+        type: boolean
+      email_password:
+        type: string
+      email_port:
+        type: integer
+      email_username:
+        type: string
+      notice:
+        allOf:
+        - $ref: '#/definitions/common.NoticeType'
+        description: 通知相关
+      source_status_detect:
+        description: 源端库运行状态检测
+        type: boolean
+      source_status_detect_disk_usage:
+        description: 源端磁盘使用率
+        type: integer
+      task_conflict_level:
+        allOf:
+        - $ref: '#/definitions/common.TaskConflictLevelType'
+        description: 任务冲突级别：源端集群级别，库级别，表级别
+      task_conflict_max:
+        description: 最多允许运行几个任务
+        type: integer
+      task_max_parallel:
+        description: 任务的最大并法数
+        type: integer
+      task_timeout:
+        description: 任务的超时时间
+        type: integer
+      thanos_url:
+        description: 监控指标地址
+        type: string
+      workflow_retention_days:
+        description: 任务的工作流保留天数
+        type: integer
+    type: object
+  services.ConnService:
+    properties:
+      bu:
+        description: 资产BU
+        type: string
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      data_bend_addr:
+        description: DataBend的AK
+        type: string
+      data_bend_ak:
+        description: DataBend的SK
+        type: string
+      data_bend_sk:
+        description: DataBend地址
+        type: string
+      description:
+        description: 说明
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      id:
+        description: ID
+        type: integer
+      mysql_host:
+        description: mysql地址
+        type: string
+      mysql_passwd:
+        description: mysql密码
+        type: string
+      mysql_port:
+        description: mysql端口
+        type: string
+      mysql_user:
+        description: mysql用户名
+        type: string
+      name:
+        description: 连接名称
+        type: string
+      storage:
+        allOf:
+        - $ref: '#/definitions/common.StorageType'
+        description: 归档介质
+      updated_at:
+        description: 修改时间
+        type: string
+    type: object
+  services.DestService:
+    properties:
+      compress:
+        description: 是否压缩存储
+        type: boolean
+      connection_id:
+        description: 归档库连接信息
+        type: integer
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      database_name:
+        description: 归档库名
+        type: string
+      description:
+        description: 说明
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      id:
+        description: ID
+        type: integer
+      name:
+        description: 目标端名称
+        type: string
+      storage:
+        allOf:
+        - $ref: '#/definitions/common.StorageType'
+        description: 归档介质
+      table_name:
+        description: 归档表名
+        example: '{source_table},table123_{YYYY-MM},{source_table}_{YYYY-MM}'
+        type: string
+      updated_at:
+        description: 修改时间
+        type: string
+    type: object
+  services.PolicyRevisionService:
+    properties:
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      id:
+        description: ID
+        type: integer
+      modify_field:
+        description: 修改字段
+        type: string
+      new_value:
+        description: 修改值
+        type: string
+      old_value:
+        description: 原始值
+        type: string
+      policy_id:
+        description: 策略ID
+        type: integer
+      updated_at:
+        description: 修改时间
+        type: string
+    type: object
+  services.PolicyService:
+    properties:
+      archive_scope:
+        description: 数据归档范围，归档那些列（仅归档涉及）
+        type: string
+      bu:
+        description: 资产BU
+        type: string
+      cleaning_speed:
+        allOf:
+        - $ref: '#/definitions/common.CleaningSpeedType'
+        description: 清理速度 稳定优先:steady, 速度适中:balanced, 速度优先:swift
+      condition:
+        description: 数据治理条件, where条件
+        type: string
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      day:
+        description: 期望在每月的几号执行，对于执行周期小于一个月的任务不生效
+        type: integer
+      description:
+        description: 说明
+        type: string
+      dest_id:
+        description: 目标端信息
+        type: integer
+      editor:
+        description: 修改人
+        type: string
+      enable:
+        description: 是否生效
+        type: boolean
+      execute_window:
+        description: '执行时间窗口 如: [] 或者 ["03:00:00", "05:00:00"]'
+        items:
+          type: string
+        type: array
+      force_archive:
+        description: 当目标库、表都存在时强制向目标端归档
+        type: boolean
+      govern:
+        allOf:
+        - $ref: '#/definitions/common.GovernType'
+        description: 数据治理方式
+      id:
+        description: ID
+        type: integer
+      name:
+        description: 策略名称
+        type: string
+      notify_policy:
+        allOf:
+        - $ref: '#/definitions/common.NotifyPolicyType'
+        description: 通知策略 不通知:silence, 成功时通知:success, 失败时通知:failed, 成功或失败都通知:always
+      pause:
+        description: 执行窗口外是否需要暂停执行
+        type: boolean
+      period:
+        allOf:
+        - $ref: '#/definitions/common.PeriodType'
+        description: 执行周期 执行一次:once, 每月一次:monthly, 每季度一次:quarterly, 每半年一次:six-months,
+          每年一次:yearly
+      rebuild_flag:
+        description: 执行窗口外是否重建表(仅在治理方式是删除时有效)。true:在执行窗口外仍然走重建流程; false:执行窗口外跳过重建流程
+        type: boolean
+      relevant:
+        description: 结果通知
+        items:
+          type: string
+        type: array
+      retain_src_data:
+        description: 归档时否保留源表数据默认不保留（仅归档涉及）
+        type: boolean
+      src_cluster_id:
+        description: 集群ID
+        type: string
+      src_cluster_name:
+        description: 集群名称
+        type: string
+      src_database_name:
+        description: 源库名
+        type: string
+      src_id:
+        description: 源端信息
+        type: integer
+      src_name:
+        description: 源端名称
+        type: string
+      src_tables_name:
+        description: 源表名
+        type: string
+      updated_at:
+        description: 修改时间
+        type: string
+    type: object
+  services.PolicyStatistic:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/services.PolicyStatisticDetail'
+        type: array
+      total:
+        type: integer
+    type: object
+  services.PolicyStatisticDetail:
+    properties:
+      bu:
+        type: string
+      cluster_name:
+        type: string
+      condition:
+        type: string
+      count:
+        description: 策略个数
+        type: integer
+      database:
+        type: string
+      govern:
+        type: string
+      period:
+        type: string
+      table:
+        type: string
+    type: object
+  services.SourceService:
+    properties:
+      bu:
+        description: 资产BU
+        type: string
+      cluster_id:
+        description: 集群ID
+        type: string
+      cluster_name:
+        description: 集群名称
+        type: string
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      database_name:
+        description: 源库名
+        type: string
+      description:
+        description: 说明
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      id:
+        description: ID
+        type: integer
+      name:
+        description: 源端名称
+        type: string
+      tables_name:
+        description: 源表名
+        type: string
+      updated_at:
+        description: 修改时间
+        type: string
+    type: object
+  services.StatisticDetail:
+    properties:
+      bu:
+        type: string
+      cluster_name:
+        type: string
+      count:
+        type: integer
+      database:
+        type: string
+      govern:
+        type: string
+      table:
+        type: string
+      total_quantity:
+        type: integer
+      total_size:
+        type: integer
+    type: object
+  services.Task:
+    properties:
+      id:
+        description: ID
+        type: integer
+      name:
+        type: string
+      task_end_time:
+        description: 执行结束时间
+        type: string
+      task_result_quantity:
+        description: 治理数据量
+        type: integer
+      task_result_size:
+        description: 治理数据容量
+        type: integer
+      task_start_time:
+        description: 开始执行时间
+        type: string
+      task_status:
+        allOf:
+        - $ref: '#/definitions/common.TaskStatusType'
+        description: 任务状态
+    type: object
+  services.TaskChangeLogService:
+    properties:
+      content:
+        description: 变化内容记录
+        type: string
+      id:
+        type: integer
+      task_id:
+        description: 任务ID
+        type: integer
+      task_status:
+        allOf:
+        - $ref: '#/definitions/common.TaskStatusType'
+        description: 任务状态
+      time:
+        description: 创建时间
+        type: string
+      user_name:
+        description: 创建人
+        type: string
+    type: object
+  services.TaskPlanService:
+    properties:
+      count:
+        type: integer
+      end_date:
+        type: string
+      start_date:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/services.Task'
+        type: array
+    type: object
+  services.TaskService:
+    properties:
+      cleaning_speed:
+        allOf:
+        - $ref: '#/definitions/common.CleaningSpeedType'
+        description: 清理速度 稳定优先:steady, 速度适中:balanced, 速度优先:swift
+      condition:
+        description: 数据治理条件
+        type: string
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      description:
+        description: 说明
+        type: string
+      dest_compress:
+        description: 是否压缩存储
+        type: boolean
+      dest_connection_id:
+        description: 归档库连接信息
+        type: integer
+      dest_database_name:
+        description: 归档库名
+        type: string
+      dest_id:
+        description: 目标端信息
+        type: integer
+      dest_name:
+        description: 目标端名称
+        type: string
+      dest_storage:
+        allOf:
+        - $ref: '#/definitions/common.StorageType'
+        description: 归档介质
+      dest_table_name:
+        description: 归档表名
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      enable:
+        description: 是否生效
+        type: boolean
+      execute_date:
+        description: 预计执行日期 "2024-01-02"
+        type: string
+      execute_window:
+        description: 执行窗口
+        items:
+          type: string
+        type: array
+      govern:
+        allOf:
+        - $ref: '#/definitions/common.GovernType'
+        description: 数据治理方式
+      id:
+        description: ID
+        type: integer
+      name:
+        description: 任务名称
+        type: string
+      notify_policy:
+        allOf:
+        - $ref: '#/definitions/common.NotifyPolicyType'
+        description: 通知策略 不通知:silence, 成功时通知:success, 失败时通知:failed, 成功或失败都通知:always
+      pause:
+        description: 执行窗口外是否需要暂停执行
+        type: boolean
+      policy_id:
+        description: 策略ID
+        type: integer
+      rebuild_flag:
+        description: 执行窗口外是否重建表(仅在治理方式是删除时有效)。true:在执行窗口外仍然走重建流程; false:执行窗口外跳过重建流程
+        type: boolean
+      relevant:
+        description: 结果通知
+        items:
+          type: string
+        type: array
+      retain_src_data:
+        description: 归档时否保留源表数据
+        type: boolean
+      src_addr:
+        description: 源端地址
+        type: string
+      src_bu:
+        description: 资产BU
+        type: string
+      src_cluster_id:
+        description: 集群ID
+        type: string
+      src_cluster_name:
+        description: 集群名称
+        type: string
+      src_columns:
+        description: 源列名
+        type: string
+      src_database_name:
+        description: 源库名
+        type: string
+      src_id:
+        description: 源端信息
+        type: integer
+      src_name:
+        description: 源端名称
+        type: string
+      src_tables_name:
+        description: 源表名
+        type: string
+      task_detail:
+        description: 任务失败详情
+        type: string
+      task_duration:
+        description: 执行时长(秒)
+        type: integer
+      task_end_time:
+        description: 执行结束时间
+        type: string
+      task_reason:
+        description: 任务失败原因
+        type: string
+      task_result_quantity:
+        description: 治理数据量
+        type: integer
+      task_result_size:
+        description: 治理数据大小
+        type: integer
+      task_start_time:
+        description: 开始执行时间
+        type: string
+      task_status:
+        allOf:
+        - $ref: '#/definitions/common.TaskStatusType'
+        description: 任务状态
+      updated_at:
+        description: 修改时间
+        type: string
+      workflow:
+        description: 工作流
+        type: string
+      workflow_url:
+        description: 工作流地址
+        type: string
+    type: object
+  services.TaskStatisticDetail:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/services.StatisticDetail'
+        type: array
+      end_date:
+        type: string
+      start_date:
+        type: string
+      total:
+        type: integer
+    type: object
+  services.TaskStatisticService:
+    properties:
+      end_date:
+        type: string
+      executing:
+        description: 执行中任务个数
+        type: integer
+      fail:
+        description: 失败任务个数
+        type: integer
+      start_date:
+        type: string
+      success:
+        description: 执行成功个数
+        type: integer
+      upcoming:
+        description: 待执行任务个数
+        type: integer
+    type: object
+  services.UserService:
+    properties:
+      created_at:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      editor:
+        description: 修改人
+        type: string
+      email:
+        description: 邮箱
+        type: string
+      id:
+        description: ID
+        type: integer
+      is_ldap:
+        description: 是否是LDAP用户
+        type: integer
+      last_login:
+        description: 上次登录时间
+        type: string
+      password:
+        description: 密码
+        type: string
+      real_name:
+        description: 姓名
+        type: string
+      token:
+        description: token，登录成功后返回
+        type: string
+      updated_at:
+        description: 修改时间
+        type: string
+      username:
+        description: 用户名
+        type: string
+    type: object
+  types.TaskResultService:
+    properties:
+      id:
+        description: 任务ID
+        type: integer
+      task_detail:
+        description: 任务失败详情
+        type: string
+      task_end_time:
+        description: 执行结束时间 "2006-01-02 15:04:05"
+        type: string
+      task_reason:
+        description: 任务失败原因
+        type: string
+      task_result_quantity:
+        description: 治理数据量
+        type: integer
+      task_result_size:
+        description: 治理数据容量
+        type: integer
+      task_start_time:
+        description: 开始执行时间 "2006-01-02 15:04:05"
+        type: string
+      task_status:
+        allOf:
+        - $ref: '#/definitions/common.TaskStatusType'
+        description: 任务状态
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: data-loom.
+  title: data-loom API
+  version: v1.0
+paths:
+  /cluster:
+    delete:
+      description: 删除集群信息
+      parameters:
+      - description: Cluster
+        in: body
+        name: Cluster
+        required: true
+        schema:
+          $ref: '#/definitions/services.ClusterService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+    get:
+      description: 查询集群信息
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: cluster_id
+        in: query
+        name: cluster_id
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 说明
+        in: query
+        name: description
+        type: string
+      - description: bu
+        in: query
+        name: bu
+        type: string
+      - description: env
+        in: query
+        name: env
+        type: string
+      - description: 添加方式：customized:自定义添加 ipaas:从资源中心导入
+        in: query
+        name: import_from
+        type: string
+      - description: 集群类型（mysql, 其他的）
+        in: query
+        name: cluster_type
+        type: string
+      - description: 集群访问地址
+        in: query
+        name: service_addr
+        type: string
+      - description: 主库地址
+        in: query
+        name: write_addr
+        type: string
+      - description: 从库地址
+        in: query
+        name: read_addr
+        type: string
+      - description: 用户名
+        in: query
+        name: user_name
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+    post:
+      description: 创建源端信息
+      parameters:
+      - description: Cluster
+        in: body
+        name: Cluster
+        required: true
+        schema:
+          $ref: '#/definitions/services.ClusterService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+    put:
+      description: 更新集群信息
+      parameters:
+      - description: Cluster
+        in: body
+        name: Cluster
+        required: true
+        schema:
+          $ref: '#/definitions/services.ClusterService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+  /cluster/{cluster_id}/{database}/tables:
+    get:
+      description: 查询指定数据库集群的库列表
+      parameters:
+      - description: cluster id
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: database name
+        in: path
+        name: database
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+  /cluster/{cluster_id}/databases:
+    get:
+      description: 查询指定数据库集群的库列表
+      parameters:
+      - description: cluster id
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+  /cluster/bigtable:
+    get:
+      description: 获取集群的大表信息（默认只获取10G以上的大表）
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+  /cluster/statistic/bu:
+    get:
+      description: 查询集群维度集群的大表统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: 统计大于等于该值的表
+        in: query
+        name: start_size
+        type: string
+      - description: 统计小于等于该值的表
+        in: query
+        name: end_size
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 统计信息
+  /cluster/statistic/cluster:
+    get:
+      description: 查询集群维度集群的大表统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: 统计大于等于该值的表
+        in: query
+        name: start_size
+        type: string
+      - description: 统计小于等于该值的表
+        in: query
+        name: end_size
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群ID
+        in: query
+        name: cluster_id
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 统计信息
+  /cluster/statistic/database:
+    get:
+      description: 查询库维度集群的大表统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: 统计大于等于该值的表
+        in: query
+        name: start_size
+        type: string
+      - description: 统计小于等于该值的表
+        in: query
+        name: end_size
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群ID
+        in: query
+        name: cluster_id
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 统计信息
+  /cluster/statistic/date:
+    get:
+      description: 查询集群维度集群的大表统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: 统计大于等于该值的表
+        in: query
+        name: start_size
+        type: string
+      - description: 统计小于等于该值的表
+        in: query
+        name: end_size
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 统计信息
+  /cluster/statistic/table:
+    get:
+      description: 查询表维度集群的大表统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: 统计大于等于该值的表
+        in: query
+        name: start_size
+        type: string
+      - description: 统计小于等于该值的表
+        in: query
+        name: end_size
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群ID
+        in: query
+        name: cluster_id
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      - description: 表名
+        in: query
+        name: table
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ClusterStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 统计信息
+  /cluster/sync:
+    get:
+      description: 同步集群信息
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 集群管理
+  /dest:
+    delete:
+      description: 删除目标端信息
+      parameters:
+      - description: Destination
+        in: body
+        name: Destination
+        required: true
+        schema:
+          $ref: '#/definitions/services.DestService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.DestService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 目标端信息
+    get:
+      description: 查询目标端信息
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 目标端ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 目标端名字
+        in: query
+        name: name
+        type: string
+      - description: 描述
+        in: query
+        name: description
+        type: string
+      - description: 存储介质
+        enum:
+        - mysql
+        - databend
+        in: query
+        name: storage
+        type: string
+      - description: 连接ID
+        in: query
+        name: connection_id
+        type: integer
+      - description: 数据库
+        in: query
+        name: database_name
+        type: string
+      - description: 表名字
+        in: query
+        name: tables_name
+        type: string
+      - description: 是否压缩存储存储
+        in: query
+        name: compress
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.DestService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 目标端信息
+    post:
+      description: 创建目标端信息
+      parameters:
+      - description: Destination
+        in: body
+        name: Destination
+        required: true
+        schema:
+          $ref: '#/definitions/services.DestService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.DestService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 目标端信息
+    put:
+      description: 更新目标端信息
+      parameters:
+      - description: Destination
+        in: body
+        name: Destination
+        required: true
+        schema:
+          $ref: '#/definitions/services.DestService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.DestService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 目标端信息
+  /dest/conn:
+    delete:
+      description: 删除归档库连接信息
+      parameters:
+      - description: Source
+        in: body
+        name: Source
+        required: true
+        schema:
+          $ref: '#/definitions/services.ConnService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 归档库连接信息
+    get:
+      description: 查询归档库连接信息
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 连接ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 连接名字
+        in: query
+        name: name
+        type: string
+      - description: bu
+        in: query
+        name: bu
+        type: string
+      - description: 说明
+        in: query
+        name: description
+        type: string
+      - description: 存储介质
+        enum:
+        - mysql
+        - databend
+        in: query
+        name: storage
+        type: string
+      - description: DataBend地址
+        in: query
+        name: data_bend_addr
+        type: string
+      - description: mysql地址
+        in: query
+        name: mysql_host
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConnService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 归档库连接信息
+    post:
+      description: 创建归档库连接信息
+      parameters:
+      - description: 归档库连接信息
+        in: body
+        name: connection
+        required: true
+        schema:
+          $ref: '#/definitions/services.ConnService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConnService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 归档库连接信息
+    put:
+      description: 更新归档库连接信息
+      parameters:
+      - description: Connection
+        in: body
+        name: Connection
+        required: true
+        schema:
+          $ref: '#/definitions/services.ConnService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConnService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 归档库连接信息
+  /dest/conn/test:
+    post:
+      description: 创建源端信息
+      parameters:
+      - description: 归档库连接信息
+        in: body
+        name: connection
+        required: true
+        schema:
+          $ref: '#/definitions/services.ConnService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConnService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 归档库连接信息
+  /health:
+    get:
+      description: 健康检查
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 其他
+  /manage/config:
+    get:
+      description: 查询配置
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConfigService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+    put:
+      description: 修改用户配置
+      parameters:
+      - description: config
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/services.ConfigService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.ConfigService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+  /manage/user:
+    get:
+      description: 查询用户
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名
+        in: query
+        name: username
+        type: string
+      - description: 姓名
+        in: query
+        name: real_name
+        type: string
+      - description: Email
+        in: query
+        name: email
+        type: string
+      - description: 是否是LDAP用户(0,1)
+        in: query
+        name: is_ldap
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.UserService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+  /manage/user/{user}:
+    delete:
+      description: 删除用户
+      parameters:
+      - description: 用户名
+        in: path
+        name: user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.UserService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+  /manage/user/register:
+    post:
+      description: 注册用户
+      parameters:
+      - description: username,password
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/services.UserService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.UserService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+  /notice/test:
+    get:
+      description: 通知测试
+      parameters:
+      - description: user
+        in: query
+        name: user
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 管理员
+  /policy:
+    delete:
+      description: 删除策略
+      parameters:
+      - description: Policy
+        in: body
+        name: Policy
+        required: true
+        schema:
+          $ref: '#/definitions/services.PolicyService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+    get:
+      description: 查询策略
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 策略ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 策略名称
+        in: query
+        name: name
+        type: string
+      - description: 描述
+        in: query
+        name: description
+        type: string
+      - description: 是否生效
+        in: query
+        name: enable
+        type: boolean
+      - description: 执行周期
+        enum:
+        - once
+        - monthly
+        - quarterly
+        - six-months
+        - yearly
+        in: query
+        name: period
+        type: string
+      - description: 执行窗口外是否需要暂停执行
+        in: query
+        name: pause
+        type: boolean
+      - description: 执行窗口外是否重建表(仅在治理方式是删除时有效)。true:在执行窗口外仍然走重建流程; false:执行窗口外跳过重建流程
+        in: query
+        name: rebuild_flag
+        type: boolean
+      - description: 清理速度
+        enum:
+        - steady
+        - balanced
+        - swift
+        in: query
+        name: cleaning_speed
+        type: string
+      - description: 源端ID
+        in: query
+        name: src_id
+        type: integer
+      - description: 数据治理方式
+        enum:
+        - truncate
+        - delete
+        - backup-delete
+        - archive
+        in: query
+        name: govern
+        type: string
+      - description: 数据治理条件
+        in: query
+        name: condition
+        type: string
+      - description: 归档时否保留源表数据
+        in: query
+        name: retain_src_data
+        type: boolean
+      - description: 目标端ID
+        in: query
+        name: dest_id
+        type: integer
+      - description: 关注人
+        in: query
+        name: relevant
+        type: string
+      - description: 通知策略
+        enum:
+        - silence
+        - success
+        - failed
+        - always
+        in: query
+        name: notify_policy
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+    post:
+      description: 创建策略
+      parameters:
+      - description: Policy
+        in: body
+        name: Policy
+        required: true
+        schema:
+          $ref: '#/definitions/services.PolicyService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+    put:
+      description: 更新策略
+      parameters:
+      - description: Policy
+        in: body
+        name: Policy
+        required: true
+        schema:
+          $ref: '#/definitions/services.PolicyService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+  /policy/revision:
+    get:
+      description: 查询策略修订记录
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: ID
+        in: query
+        name: id
+        type: integer
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 策略ID
+        in: query
+        name: policy_id
+        type: integer
+      - description: 修改字段
+        in: query
+        name: modify_field
+        type: string
+      - description: 原始值
+        in: query
+        name: old_value
+        type: string
+      - description: 修改值
+        in: query
+        name: new_value
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyRevisionService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+  /policy/statistic/bu:
+    get:
+      description: 查询bu维度统计信息
+      parameters:
+      - description: 是否开启
+        in: query
+        name: enable
+        type: boolean
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /policy/statistic/cluster:
+    get:
+      description: 查询集群维度统计信息
+      parameters:
+      - description: 是否开启
+        in: query
+        name: enable
+        type: boolean
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /policy/statistic/database:
+    get:
+      description: 查询库维度统计信息
+      parameters:
+      - description: 是否开启
+        in: query
+        name: enable
+        type: boolean
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /policy/statistic/table:
+    get:
+      description: 查询表维度统计信息
+      parameters:
+      - description: 是否开启
+        in: query
+        name: enable
+        type: boolean
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      - description: 表名
+        in: query
+        name: table
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyStatistic'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /source:
+    delete:
+      description: 删除源端信息
+      parameters:
+      - description: Source
+        in: body
+        name: Source
+        required: true
+        schema:
+          $ref: '#/definitions/services.SourceService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 源端信息
+    get:
+      description: 查询源端信息
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 源端ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 源端名字
+        in: query
+        name: name
+        type: string
+      - description: 说明
+        in: query
+        name: description
+        type: string
+      - description: bu
+        in: query
+        name: bu
+        type: string
+      - description: service名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: cluster_id
+        in: query
+        name: cluster_id
+        type: string
+      - description: 数据库
+        in: query
+        name: database_name
+        type: string
+      - description: 表名字
+        in: query
+        name: tables_name
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.SourceService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 源端信息
+    post:
+      description: 创建源端信息
+      parameters:
+      - description: Source
+        in: body
+        name: Source
+        required: true
+        schema:
+          $ref: '#/definitions/services.SourceService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.SourceService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 源端信息
+    put:
+      description: 创建源端信息
+      parameters:
+      - description: Source
+        in: body
+        name: Source
+        required: true
+        schema:
+          $ref: '#/definitions/services.SourceService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.SourceService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 源端信息
+  /task:
+    delete:
+      description: 删除任务
+      parameters:
+      - description: Task
+        in: body
+        name: Task
+        required: true
+        schema:
+          $ref: '#/definitions/services.TaskService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务
+    get:
+      description: 查询任务
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 任务ID
+        in: query
+        name: id
+        type: integer
+      - description: 创建人
+        in: query
+        name: creator
+        type: string
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 任务名称
+        in: query
+        name: name
+        type: string
+      - description: 描述
+        in: query
+        name: description
+        type: string
+      - description: 是否生效
+        in: query
+        name: enable
+        type: boolean
+      - description: 策略ID
+        in: query
+        name: policy_id
+        type: integer
+      - description: '计划执行日期: 2024-03-01'
+        in: query
+        name: execute_date
+        type: string
+      - description: 执行窗口外是否需要暂停执行
+        in: query
+        name: pause
+        type: boolean
+      - description: 执行窗口外是否重建表(仅在治理方式是删除时有效)。true:在执行窗口外仍然走重建流程; false:执行窗口外跳过重建流程
+        in: query
+        name: rebuild_flag
+        type: boolean
+      - description: 任务状态
+        in: query
+        name: task_status
+        type: integer
+      - description: 任务失败原因
+        in: query
+        name: task_reason
+        type: string
+      - description: 任务失败详情
+        in: query
+        name: task_detail
+        type: string
+      - description: 工作流
+        in: query
+        name: workflow
+        type: string
+      - description: 源端ID
+        in: query
+        name: src_id
+        type: integer
+      - description: 源端名称
+        in: query
+        name: src_name
+        type: string
+      - description: 资产BU
+        in: query
+        name: src_bu
+        type: string
+      - description: 源端集群名称
+        in: query
+        name: src_cluster_name
+        type: string
+      - description: 源端集群ID
+        in: query
+        name: src_cluster_id
+        type: string
+      - description: 源库名
+        in: query
+        name: src_database_name
+        type: string
+      - description: 源表名
+        in: query
+        name: src_tables_name
+        type: string
+      - description: 源端归档列名
+        in: query
+        name: src_columns
+        type: string
+      - description: 数据治理方式
+        enum:
+        - truncate
+        - delete
+        - backup-delete
+        - archive
+        in: query
+        name: govern
+        type: string
+      - description: 数据治理条件
+        in: query
+        name: condition
+        type: string
+      - description: 是否清理源表
+        in: query
+        name: clean_src
+        type: boolean
+      - description: 清理速度
+        enum:
+        - steady
+        - balanced
+        - swift
+        in: query
+        name: cleaning_speed
+        type: string
+      - description: 目标端ID
+        in: query
+        name: dest_id
+        type: integer
+      - description: 目标端名称
+        in: query
+        name: dest_name
+        type: string
+      - description: 存储介质
+        enum:
+        - mysql
+        - databend
+        in: query
+        name: dest_storage
+        type: string
+      - description: 目标端连接ID
+        in: query
+        name: dest_connection_id
+        type: integer
+      - description: 目标端数据库
+        in: query
+        name: dest_database_name
+        type: string
+      - description: 目标端表名字
+        in: query
+        name: dest_table_name
+        type: string
+      - description: 目标端是否压缩存储存储
+        in: query
+        name: dest_compress
+        type: boolean
+      - description: 关注人
+        in: query
+        name: relevant
+        type: string
+      - description: 通知策略
+        enum:
+        - silence
+        - success
+        - failed
+        - always
+        in: query
+        name: notify_policy
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务
+    put:
+      description: 更新任务
+      parameters:
+      - description: Task
+        in: body
+        name: Task
+        required: true
+        schema:
+          $ref: '#/definitions/services.TaskService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务
+  /task/changelog:
+    get:
+      description: 查询任务状态变更历史极力
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: 任务ID
+        in: query
+        name: task_id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskChangeLogService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 策略
+  /task/plan:
+    get:
+      description: 查询任务执行计划
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskPlanService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /task/result:
+    put:
+      description: 上报任务执行结果
+      parameters:
+      - description: TaskResult
+        in: body
+        name: TaskResult
+        required: true
+        schema:
+          $ref: '#/definitions/types.TaskResultService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务
+  /task/revision:
+    get:
+      description: 查询任务修订记录
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: ID
+        in: query
+        name: id
+        type: integer
+      - description: 修改人
+        in: query
+        name: editor
+        type: string
+      - description: 任务ID
+        in: query
+        name: task_id
+        type: integer
+      - description: 修改字段
+        in: query
+        name: modify_field
+        type: string
+      - description: 原始值
+        in: query
+        name: old_value
+        type: string
+      - description: 修改值
+        in: query
+        name: new_value
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.PolicyRevisionService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务
+  /task/statistic/bu:
+    get:
+      description: 查询bu维度统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskStatisticDetail'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /task/statistic/cluster:
+    get:
+      description: 查询集群维度统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskStatisticDetail'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /task/statistic/database:
+    get:
+      description: 查询库维度统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskStatisticDetail'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /task/statistic/summary:
+    get:
+      description: 查询任务统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskStatisticService'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /task/statistic/table:
+    get:
+      description: 查询表维度统计信息
+      parameters:
+      - description: 统计开始日期
+        in: query
+        name: start_date
+        type: string
+      - description: 统计结束日期
+        in: query
+        name: end_date
+        type: string
+      - description: BU
+        in: query
+        name: bu
+        type: string
+      - description: 集群名称
+        in: query
+        name: cluster_name
+        type: string
+      - description: 库名
+        in: query
+        name: database
+        type: string
+      - description: 表名
+        in: query
+        name: table
+        type: string
+      - description: 治理方式
+        in: query
+        name: govern
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.TaskStatisticDetail'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 任务统计
+  /user:
+    put:
+      description: 修改用户信息
+      parameters:
+      - description: username
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/services.UserService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.UserService'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 用户
+  /user/login:
+    put:
+      description: 用户登录
+      parameters:
+      - description: username,password,is_ldap
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/services.UserService'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/services.UserService'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+      tags:
+      - 用户
+schemes:
+- http
+- https
+swagger: "2.0"

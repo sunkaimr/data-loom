@@ -1,0 +1,48 @@
+server:
+  # debug release test
+  ginMode: "debug"
+  # 监听的端口
+  port: "8080"
+  # 从外部访问服务时的地址http://ip:port
+  externalAddr: "http://127.0.0.1:8080"
+
+Jwt:
+  # secret 长度必须为16或32或64
+  secret: "abcdefghijklmnop"
+
+mysql:
+  host: "192.168.198.1"
+  port: "3306"
+  user: "root"
+  password: "123456"
+  database: "data-loom"
+
+log:
+  path: "data-loom.log"
+  # error warn info debug
+  level: "debug"
+  maxSize: 10
+  maxBackups: 7
+  maxAge: 10
+  compress: false
+
+job:
+  # 一天运行一次：运行策略调度任务，将策略实例化为任务
+  policyCron: "0 16 * * *"
+  # 一天运行一次：提前一天检查任务是否具备执行条件
+  taskCron: "0 9,17 * * *"
+
+workflow:
+  driver: "argo"
+  argo:
+    url: "http://argoworkflow.com"
+    token: "xxxx"
+    templates:
+      # 清空表
+      truncate: "data-loom/mysql-truncate"
+      # 清空表
+      delete: "data-loom/mysql-delete"
+      # 重建表
+      rebuild: "data-loom/mysql-rebuild-table"
+      # 归档表
+      archive: "data-loom/mysql-archive"

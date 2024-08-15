@@ -1,0 +1,162 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: mysql-truncate
+  namespace: default
+spec:
+  templates:
+    - name: main
+      inputs: {}
+      outputs: {}
+      metadata: {}
+      dag:
+        tasks:
+          - name: parse-para
+            template: save-para
+            arguments:
+              parameters:
+                - name: task_id
+                  value: '{{ workflow.parameters.task_id }}'
+                - name: mysql_host
+                  value: '{{ workflow.parameters.mysql_host }}'
+                - name: mysql_port
+                  value: '{{ workflow.parameters.mysql_port }}'
+                - name: mysql_user
+                  value: '{{ workflow.parameters.mysql_user }}'
+                - name: mysql_password
+                  value: '{{ workflow.parameters.mysql_password }}'
+                - name: database_name
+                  value: '{{ workflow.parameters.database_name }}'
+                - name: table_name
+                  value: '{{ workflow.parameters.table_name }}'
+                - name: callback_url
+                  value: '{{ workflow.parameters.callback_url }}'
+                - name: callback_token
+                  value: '{{ workflow.parameters.callback_token }}'
+          - name: truncate-table
+            arguments:
+              parameters:
+                - name: para_path
+                  value: /output/data-loom/mysql-truncate/{{workflow.name}}.json
+            templateRef:
+              name: mysql-sql-operations-atom
+              template: truncate-table
+            depends: parse-para
+    - name: save-para
+      inputs:
+        parameters:
+          - name: task_id
+          - name: mysql_host
+          - name: mysql_port
+          - name: mysql_user
+          - name: mysql_password
+          - name: database_name
+          - name: table_name
+          - name: callback_url
+          - name: callback_token
+        artifacts:
+          - name: para-template
+            path: /para-template.json
+            s3:
+              key: /input/data-loom/mysql-truncate-template.json
+      outputs:
+        artifacts:
+          - name: save-para
+            path: /para.json
+            s3:
+              key: /output/data-loom/mysql-truncate/{{workflow.name}}.json
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+        resources: {}
+        imagePullPolicy: Always
+        source: >
+          set -x;          
+          set -e;
+          cat /para-template.json > /para.json
+
+          task_id={{inputs.parameters.task_id}}
+
+          mysql_host={{inputs.parameters.mysql_host}}
+
+          mysql_port={{inputs.parameters.mysql_port}}
+
+          mysql_user={{inputs.parameters.mysql_user}}
+
+          mysql_password={{inputs.parameters.mysql_password}}
+
+          database_name={{inputs.parameters.database_name}}
+
+          table_name={{inputs.parameters.table_name}}
+
+          callback_url={{inputs.parameters.callback_url}}
+
+          callback_token={{inputs.parameters.callback_token}}
+
+          jq --arg task_id $task_id --arg mysql_host "$mysql_host" --arg
+          mysql_port "$mysql_port" --arg mysql_user "$mysql_user" --arg
+          mysql_password "$mysql_password" --arg database_name "$database_name"
+          --arg table_name "$table_name" --arg callback_url "$callback_url"
+          --arg callback_token "$callback_token"  '.task_id=($task_id|tonumber)
+          | .host=$mysql_host | .port=$mysql_port | .user=$mysql_user |
+          .password=$mysql_password | .database=$database_name |
+          .tables=$table_name | .callback.url=$callback_url |
+          .callback.token=$callback_token |
+          .callback_result.id=($task_id|tonumber)' /para-template.json | tee /para.json
+    - name: result-handler
+      inputs: {}
+      outputs: {}
+      metadata: {}
+      steps:
+        - - name: succeeded
+            arguments:
+              parameters:
+                - name: exit_status
+                  value: Succeeded
+                - name: result_path
+                  value: /output/data-loom/mysql-truncate/{{workflow.name}}.json
+            templateRef:
+              name: data-loom-handle-result-atom
+              template: result-handler
+            when: '{{workflow.status}} == Succeeded'
+          - name: failed
+            arguments:
+              parameters:
+                - name: exit_status
+                  value: Failed
+                - name: result_path
+                  value: /output/data-loom/mysql-truncate/{{workflow.name}}.json
+            templateRef:
+              name: data-loom-handle-result-atom
+              template: result-handler
+            when: '{{workflow.status}} != Succeeded'
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: task_id
+        value: '123'
+      - name: mysql_host
+        value: 10.2.7.26
+      - name: mysql_port
+        value: '30336'
+      - name: mysql_user
+        value: root
+      - name: mysql_password
+        value: '123456'
+      - name: database_name
+        value: test
+      - name: table_name
+        value: student
+      - name: callback_url
+        value: http://127.0.0.1:8080/data-loom/api/v1/task/result
+      - name: callback_token
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ4NzEyNDUyMDcsInVzZXJpZCI6MCwidXNlcm5hbWUiOiJhZG1pbiJ9.YbVSvPQO3W6k06u9Sl0nilOFk4jcIOEBwK-eFz3l0Rk"
+  serviceAccountName: argoexec
+  onExit: result-handler
+  podGC:
+    strategy: OnWorkflowCompletion

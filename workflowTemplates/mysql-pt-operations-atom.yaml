@@ -1,0 +1,212 @@
+metadata:
+  name: mysql-pt-operations-atom
+  namespace: default
+spec:
+  templates:
+    - name: pt-archiver
+      inputs:
+        parameters:
+          - name: para_path
+        artifacts:
+          - name: para
+            path: /input/para.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+      outputs:
+        artifacts:
+          - name: result
+            path: /result.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+        resources: {}
+        source: >
+          set -x;   
+          
+          set -e;
+          
+          cat /input/para.json > /result.json
+
+          mysql_host=`jq -r '.host' /input/para.json`
+
+          mysql_port=`jq -r '.port' /input/para.json`
+
+          mysql_user=`jq -r '.user' /input/para.json`
+
+          mysql_password=`jq -r '.password' /input/para.json`
+
+          database_name=`jq -r '.database' /input/para.json`
+
+          table_name=`jq -r '.tables' /input/para.json`
+
+          condition=`jq -r '.condition' /input/para.json`
+
+          IFS=',' read -ra tables <<< "$table_name"
+           
+          total_rows=0
+          
+          echo "condition:`echo -n ${condition} | base64 -d`"
+
+          for table in "${tables[@]}"; do
+                pt-archiver --source h=${mysql_host},P=${mysql_port},u=${mysql_user},p=${mysql_password},D=${database_name},t=${table} --where "`echo -n ${condition} | base64 -d`" --progress 10000 --limit 2000 --txn-size 2000  --bulk-delete --purge --no-check-charset --sleep=1 --no-safe-auto-increment --statistics 2>&1 | tee  /tmp/delete_rows.txt
+                if [[ $? = 0 ]]; then
+                    if [[ $(cat /tmp/delete_rows.txt | wc -l) -gt 10 ]]; then
+                      if [[ $(cat /tmp/delete_rows.txt | grep "^DELETE" | wc -l) -gt 0 ]]; then
+                          echo "Table $table has been cleaned."
+                      else
+                          echo "clean table $table failed."
+                          delete_rows=$(tail -1 /tmp/delete_rows.txt |awk '{print $3}')
+                          total_rows=$(( total_rows + delete_rows))
+                          jq --arg total_rows $total_rows '.callback_result.task_result_quantity=($total_rows|tonumber)' /input/para.json | tee /result.json
+                          exit 1
+                      fi
+                    fi
+                else
+                    echo "clean table $table failed."
+                    jq --arg total_rows $total_rows '.callback_result.task_result_quantity=($total_rows|tonumber)' /input/para.json | tee /result.json
+                    exit 1
+                fi
+                delete_rows=$(cat /tmp/delete_rows.txt | grep DELETE | awk '{print $2}')
+                total_rows=$(( total_rows + delete_rows))
+          done
+
+          jq --arg total_rows $total_rows '.callback_result.task_result_quantity=($total_rows|tonumber)' /input/para.json | tee /result.json
+
+    - name: pt-online-schema-change
+      inputs:
+        parameters:
+          - name: para_path
+        artifacts:
+          - name: para
+            path: /input/para.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+      outputs:
+        artifacts:
+          - name: result
+            path: /result.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+          - '-c'
+          - |
+            set -x;
+            
+            set -e;
+            
+            cat /input/para.json > /result.json
+            
+            mysql_host=`jq -r '.host' /input/para.json`
+            
+            mysql_port=`jq -r '.port' /input/para.json`
+            
+            mysql_user=`jq -r '.user' /input/para.json`
+            
+            mysql_password=`jq -r '.password' /input/para.json`
+            
+            database_name=`jq -r '.database' /input/para.json`
+            
+            table_name=`jq -r '.need_rebuild' /input/para.json`
+            
+            start_time=`jq -r '.start_time' /input/para.json`
+            
+            end_time=`jq -r '.end_time' /input/para.json`
+            
+            rebuild_flag=`jq -r '.rebuild_flag' /input/para.json`     
+            
+            rebuild_faild_table=""
+            
+            if [ -z "$table_name" ]; then
+                echo "没有需要重建的表"
+                exit 0
+            fi
+            
+            function check_rebuild_table() {    
+                local start_time=$1
+                local end_time=$2
+                local rebuild_flag=$3
+            
+                if [[ $rebuild_flag == true ]]; then
+                    echo "重建标志为true，跳过时间判断直接重建表" 
+                    return 1
+                fi
+            
+                local current_time=$(date +%H:%M)            
+            
+                # 为给重建表留足够的时间，故将结束的时间窗口向前提2h
+                local new_end_time=$(date -u -d "$end_time UTC - 2 hours" +"%H:%M:%S")
+
+                # 执行时间窗口未跨天
+                if [[ "$end_time" > "$start_time" ]]; then  
+                    if [[ "$current_time" > "$start_time" && "$current_time" < "$new_end_time" ]]; then 
+                        # 在时间窗口内
+                        echo "当前时间在执行窗口时间段内，重建表开始"
+                        return 1
+                    else    
+                        echo "当前时间不在执行窗口时间段内，未执行重建表操作"      
+                        return 0
+                    fi  
+                else   
+                    # 执行时间窗口跨天了
+                    if [[ "$current_time" > "$start_time"  ||  "$current_time" < "$new_end_time" ]]; then  
+                        # 在时间窗口内
+                        echo "当前时间在执行窗口时间段内，重建表开始"
+                        return 1
+                    else  
+                        echo "当前时间不在执行窗口时间段内，未执行重建表操作" 
+                        return 0
+                    fi  
+                fi            
+            }
+            
+            date;
+            
+            set +e;
+            check_rebuild_table $start_time $end_time $rebuild_flag
+            if [[ $? == 1 ]]; then            
+              IFS=',' read -ra tables  <<< "$table_name" 
+              for table in "${tables[@]}"; do
+                  pt-online-schema-change --user=${mysql_user} --password=${mysql_password} --host=${mysql_host} --port=${mysql_port} --alter "engine=innodb"  D=${database_name},t=${table}  --print --execute  --critical-load="Threads_running=250" --max-load="Threads_running=300"
+                  if [[ $? = 0 ]]; then
+                      echo "Table $table rebuild complete."
+                  else
+                      echo "Rebuild table $table  failed."
+                      rebuild_faild_table="$rebuild_faild_table $table_name"
+                  fi
+              done
+            
+              set -e;
+            
+              if [ -n "$rebuild_faild_table" ]; then
+                  rebuild_faild_table="rebuild failed tables:$rebuild_faild_table"
+                  jq --arg rebuild_faild_table "$rebuild_faild_table" --arg task_reason "重建表失败"  '.callback_result.task_detail=$rebuild_faild_table|.callback_result.task_reason=$task_reason' /input/para.json | tee >  /result.json
+              else
+                    cat /input/para.json | tee  /result.json
+              fi             
+            else    
+              set -e;
+              jq  --arg task_reason "未执行重建表操作"  '.callback_result.task_reason=$task_reason' /input/para.json | tee >  /result.json            
+            fi           
+
+        resources: {}
+        source: ''
+  entrypoint: pt-archiver
+  arguments:
+    parameters:
+      - name: para_path
+        value: ''
+  serviceAccountName: argoexec

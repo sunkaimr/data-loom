@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: data-loom
+  name: data-loom
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-loom
+  template:
+    metadata:
+      labels:
+        app: data-loom
+    spec:
+      containers:
+        - name: data-loom
+          image: data-loom:v0.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: web
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /data-loom/api/v1/health
+              port: web
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /data-loom/api/v1/health
+              port: web
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+          - name: data-loom-cm
+            mountPath: /opt/config.yaml
+            subPath: config.yaml
+      volumes:
+        - name: data-loom-cm
+          configMap:
+            name: data-loom-cm
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-loom-cm
+  namespace: default
+data:
+  config.yaml: |
+    server:
+      # debug release test
+      ginMode: "release"
+      port: "8080"
+      externalAddr: "http://10.2.7.26:31009"
+    
+    Jwt:
+      # secret 长度必须为16或32或64
+      secret: "abcdefghijklmnop"
+    
+    mysql:
+      host: "127.0.0.1"
+      port: "3306"
+      user: "root"
+      password: "123456"
+      dataBase: "data-loom"
+    
+    log:
+      path: "data-loom.log"
+      # error warn info debug
+      level: "debug"
+      maxSize: 10
+      maxBackups: 7
+      maxAge: 10
+      compress: false
+    job:
+      # 一天运行一次：运行策略调度任务，将策略实例化为任务
+      policyCron: "0 16 * * *"
+      # 一天运行一次：提前一天检查任务是否具备执行条件
+      taskCron: "0 9,17 * * *"
+    
+    workflow:
+      driver: "argo"
+      argo:
+        url: "http://argoworkflow.com"
+        token: ""
+        templates:
+          # 清空表
+          truncate: "data-loom/mysql-truncate"
+          # 清空表
+          delete: "data-loom/mysql-delete"
+          # 重建表
+          rebuild: "data-loom/mysql-rebuild-table"
+          # 归档表
+          archive: "data-loom/mysql-archive"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: data-loom
+  name: data-loom
+  namespace: iop-saas
+spec:
+  ports:
+    - name: tcp
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: data-loom
+  sessionAffinity: None
+  type: ClusterIP

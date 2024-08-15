@@ -1,0 +1,168 @@
+metadata:
+  name: mysql-sql-operations-atom
+  namespace: default
+spec:
+  templates:
+    - name: check-fragmentation
+      inputs:
+        parameters:
+          - name: para_path
+        artifacts:
+          - name: para
+            path: /input/para.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+      outputs:
+        artifacts:
+          - name: result
+            path: /result.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+          - '-c'
+          - >
+            set -x ; 
+            
+            set -e ;
+
+            cat /input/para.json > /result.json
+
+            mysql_host=`jq -r '.host' /input/para.json`
+
+            mysql_port=`jq -r '.port' /input/para.json`
+
+            mysql_user=`jq -r '.user' /input/para.json`
+
+            mysql_password=`jq -r '.password' /input/para.json`
+
+            database_name=`jq -r '.database' /input/para.json`
+
+            table_name=`jq -r '.tables' /input/para.json`
+
+            free_disk=`jq -r '.free_disk' /input/para.json`
+
+            formatted_table_name=$(echo $table_name| tr ',' '\n' | sed "s/.*/'&'/g" | paste -sd ',' -)
+
+            ret=`mysql -h${mysql_host} -P${mysql_port} -u${mysql_user} -p${mysql_password} -e "select table_name , ROUND( (data_length + index_length) / (1024 * 1024), 2)  as 'rebuild_require_space', ROUND(IFNULL(data_free / (data_length + index_length + data_free) * 100, 0), 2)  as 'frag_pct' from information_schema.TABLES where table_schema = '${database_name}' and table_name in (${formatted_table_name});" 2>/dev/null --batch --raw | jq -R -s -c 'split("\n")[:-1] | map(split("\t") | map(select(. != ""))) | .[1:] as $rows | .[0] as $header | $rows | map([ $header, . ] | transpose | map({ key:.[0], value:.[1] }) | from_entries)'`
+
+            if [ "$ret" = "[]" ];  then 
+              echo "查询表碎片结果为空"
+              exit 1
+            fi
+
+            ret_str=$(echo "$ret" | sed 's/\\//g')  
+
+            need_rebuild="" 
+
+            for row in $(echo "${ret_str}" | jq -c '.[]'); do
+              rebuild_require_space=$(echo "${row}" | jq -r '.rebuild_require_space')
+              frag_pct=$(echo "${row}" | jq -r '.frag_pct')
+              table_name=$(echo "${row}" | jq -r '.table_name')
+
+              if (( $(awk -v rebuild_require_space="$rebuild_require_space" -v frag_pct="$frag_pct" -v free_disk="$free_disk" 'BEGIN {print (rebuild_require_space < free_disk && frag_pct > 1)}') )); then 
+                if [ -z "$need_rebuild" ];  then 
+                  need_rebuild="$table_name"
+                else
+                  need_rebuild="$need_rebuild,$table_name"
+                fi
+              fi
+            done
+
+            echo "需要重建的表为: $need_rebuild" 
+
+            if [ -z "$need_rebuild" ]; then
+              jq --arg ret $ret  --arg task_reason "不符合重建表规则,未触发重建" '.frag_info=$ret |.callback_result.task_reason=$task_reason' /input/para.json | tee /result.json
+              echo "没有需要重建的表"
+            else
+              jq --arg ret $ret --arg need_rebuild $need_rebuild '.frag_info=$ret |.need_rebuild=$need_rebuild' /input/para.json | tee /result.json  
+            fi
+        resources: {}
+        source: ''
+    - name: truncate-table
+      inputs:
+        parameters:
+          - name: para_path
+        artifacts:
+          - name: para
+            path: /input/para.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+      outputs:
+        artifacts:
+          - name: result
+            path: /result.json
+            s3:
+              key: '{{inputs.parameters.para_path}}'
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+          - '-c'
+          - >
+            set -x;  
+
+            set -e; 
+
+            cat /input/para.json > /result.json
+
+            mysql_host=`jq -r '.host' /input/para.json`
+
+            mysql_port=`jq -r '.port' /input/para.json`
+
+            mysql_user=`jq -r '.user' /input/para.json`
+
+            mysql_password=`jq -r '.password' /input/para.json`
+
+            database_name=`jq -r '.database' /input/para.json`
+
+            table_name=`jq -r '.tables' /input/para.json`
+
+            IFS=',' read -ra tables <<< "$table_name"
+
+            total_rows=0
+
+            status="success"
+
+            for table in "${tables[@]}"; do
+               ret=`mysql -h${mysql_host} -P${mysql_port} -u${mysql_user} -p${mysql_password} -D${database_name} --batch --raw 2>/dev/null -e "select table_rows from information_schema.tables where TABLE_SCHEMA='${database_name}' and table_name='${table}'"`
+               ret=`echo $ret | awk '{print $2}'`
+               total_rows=$(( total_rows + ret))
+               mysql -h${mysql_host} -P${mysql_port} -u${mysql_user} -p${mysql_password} -D${database_name} -e "TRUNCATE TABLE ${table};"
+               if [[ $? = 0 ]]; then
+                 echo "Table $table has been truncated."
+               else
+                 echo "truncate Table $table  failed."
+                 status="failed"
+               fi               
+            done 
+
+            echo "total_rows: $total_rows" 
+
+            jq --arg total_rows $total_rows --arg status $status
+            '.callback_result.task_result_quantity=($total_rows | tonumber) |
+            .callback_result.task_status=$status' /input/para.json | tee >
+            /result.json
+
+            if [[ "${status}" != "success" ]]; then
+              exit 1            
+            fi
+        resources: {}
+        source: ''
+  entrypoint: truncate-table
+  arguments:
+    parameters:
+      - name: para_path
+        value: ''
+  serviceAccountName: argoexec
+

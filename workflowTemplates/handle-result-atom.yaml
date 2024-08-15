@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: data-loom-handle-result-atom
+  namespace: default
+spec:
+  templates:
+    - name: main
+      inputs: {}
+      outputs: {}
+      metadata: {}
+      steps:
+        - - name: result-handler
+            template: result-handler
+            arguments:
+              parameters:
+                - name: exit_status
+                  value: '{{ workflow.parameters.exit_status }}'
+                - name: result_path
+                  value: ''
+    - name: result-handler
+      inputs:
+        parameters:
+          - name: exit_status
+          - name: result_path
+        artifacts:
+          - name: para
+            path: /input/para.json
+            s3:
+              key: '{{inputs.parameters.result_path}}'
+      outputs:
+        artifacts:
+          - name: result
+            path: /result.json
+            s3:
+              key: '{{inputs.parameters.result_path}}'
+            archive:
+              none: {}
+      metadata: {}
+      script:
+        name: ''
+        image: percona-toolkit:5.0.0
+        command:
+          - bash
+        resources: {}
+        imagePullPolicy: Always
+        source: >
+          set -x;  
+          
+          set -e;
+          
+          cat /input/para.json > /result.json
+
+          exit_status={{inputs.parameters.exit_status}}
+
+          status="success"
+
+          if [[ "${exit_status}" == "Succeeded" ]]; then
+              status="success"
+          else
+              status="failed"
+          fi
+
+          jq --arg status $status '.callback_result.task_status=$status' /input/para.json | tee /result.json
+
+          callback_url=`jq -r '.callback.url' /input/para.json`
+          callback_token=`jq -r '.callback.token' /input/para.json`
+
+          jq  '.callback_result' /result.json | tee /tmp/body.json
+
+          curl -s -X PUT ${callback_url} -H "Authorization: Bearer ${callback_token}" -H "Content-Type: application/json" -d@/tmp/body.json
+
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: exit_status
+        value: ''
+      - name: result_path
+        value: ''
+  serviceAccountName: argoexec
