@@ -37,7 +37,7 @@ type TruncateParaStruct struct {
 	Database       string            `json:"database"`
 	Tables         string            `json:"tables"`
 	Callback       Callback          `json:"callback"`
-	CallBackResult TaskResultService `json:"callback_result"`
+	CallbackResult TaskResultService `json:"callback_result"`
 }
 
 type DeleteParaStruct struct {

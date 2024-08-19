@@ -26,8 +26,5 @@ go.work
 tmp
 logs
 assets/.DS_Store
-
-pkg/docker
-pkg/executer
-pkg/workflow-controller
+dist
 

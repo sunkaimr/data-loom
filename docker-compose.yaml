@@ -1,0 +1,35 @@
+services:
+  data-loom-db:
+    image: registry.cn-beijing.aliyuncs.com/data-loom/mysql:5.7.43
+    container_name: data-loom-db
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: data-loom
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+    - data-loom
+    ports:
+      - '33306:3306'
+  data-loom-api:
+    image: registry.cn-beijing.aliyuncs.com/data-loom/data-loom:1.0.0
+    container_name: data-loom-api
+    environment:
+      TZ: Asia/Shanghai
+    depends_on:
+      data-loom-db:
+        condition: service_healthy
+    volumes:
+      - ./config.yaml:/opt/config.yaml
+    networks:
+    - data-loom
+    ports:
+      - '38080:8080'
+networks:
+  data-loom:
+    driver: bridge

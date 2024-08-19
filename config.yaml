@@ -11,7 +11,7 @@ Jwt:
   secret: "abcdefghijklmnop"
 
 mysql:
-  host: "192.168.198.1"
+  host: "data-loom-db"
   port: "3306"
   user: "root"
   password: "123456"
@@ -33,16 +33,16 @@ job:
   taskCron: "0 9,17 * * *"
 
 workflow:
-  driver: "argo"
-  argo:
-    url: "http://argoworkflow.com"
-    token: "xxxx"
-    templates:
-      # 清空表
-      truncate: "data-loom/mysql-truncate"
-      # 清空表
-      delete: "data-loom/mysql-delete"
-      # 重建表
-      rebuild: "data-loom/mysql-rebuild-table"
-      # 归档表
-      archive: "data-loom/mysql-archive"
+  driver: "mock"
+#  argo:
+#    url: "http://argoworkflow.com"
+#    token: "xxxx"
+#    templates:
+#      # 清空表
+#      truncate: "data-loom/mysql-truncate"
+#      # 清空表
+#      delete: "data-loom/mysql-delete"
+#      # 重建表
+#      rebuild: "data-loom/mysql-rebuild-table"
+#      # 归档表
+#      archive: "data-loom/mysql-archive"

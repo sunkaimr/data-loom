@@ -1,6 +1,6 @@
 # Image URL to use all building/pushing image targets
-VER ?= v1.0.0
-IMG ?= data-loom:${VER}
+VER ?= 1.0.0
+IMG ?= registry.cn-beijing.aliyuncs.com/data-loom/data-loom:${VER}
 
 # application name
 APP ?= data-loom

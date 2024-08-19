@@ -4,8 +4,9 @@ import (
 	"github.com/sunkaimr/data-loom/configs"
 	"github.com/sunkaimr/data-loom/internal/pkg/common"
 	"github.com/sunkaimr/data-loom/internal/workflow/types"
-	"github.com/sunkaimr/data-loom/pkg/argo"
-	"github.com/sunkaimr/data-loom/pkg/docker"
+	"github.com/sunkaimr/data-loom/pkg/workflow/argo"
+	"github.com/sunkaimr/data-loom/pkg/workflow/docker"
+	"github.com/sunkaimr/data-loom/pkg/workflow/mock"
 )
 
 type Workflow interface {
@@ -46,10 +47,9 @@ func NewDriver(driver string) Workflow {
 		}
 	case "docker":
 		return &docker.Docker{}
+	case "mock":
+		return &mock.Mock{}
 	default:
-		return &argo.Argo{
-			URL:  configs.C.WorkFlow.Argo.URL,
-			Auth: configs.C.WorkFlow.Argo.Token,
-		}
+		return &mock.Mock{}
 	}
 }

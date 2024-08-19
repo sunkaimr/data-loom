@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: data-loom
-          image: data-loom:v0.0.0
+          image: registry.cn-beijing.aliyuncs.com/data-loom/data-loom:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
