@@ -42,7 +42,7 @@
 -  先安装 Docker 环境, 以及Docker Compose
 - 拷贝项目
 ```shell 
-git clone https://github.com/veops/cmdb.git --depth=1
+git clone https://github.com/sunkaimr/data-loom.git --depth=1
 ```
 - 第三步：进入主目录，执行:
 ```
