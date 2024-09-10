@@ -90,16 +90,18 @@ type ClusterStatistic struct {
 
 // ClusterStatisticDetail 大表统计信息
 type ClusterStatisticDetail struct {
-	Date        string `json:"date"`         // 统计的日期
-	Bu          string `json:"bu"`           // bu
-	ClusterID   string `json:"cluster_id"`   // 集群ID
-	ClusterName string `json:"cluster_name"` // 集群名称
-	Database    string `json:"database"`     // 库名
-	Table       string `json:"table"`        // 表名
-	TableSize   int    `json:"table_size"`   // 表大小(GB)
-	TablesNum   int    `json:"tables_num"`   // 大表个数
-	PoliciesNum int    `json:"policies_num"` // 策略个数
-	Policies    string `json:"policies"`     // 对应的策略
+	Date            string `json:"date"`               // 统计的日期
+	Bu              string `json:"bu"`                 // bu
+	ClusterID       string `json:"cluster_id"`         // 集群ID
+	ClusterName     string `json:"cluster_name"`       // 集群名称
+	Database        string `json:"database"`           // 库名
+	Table           string `json:"table"`              // 表名
+	TableSize       int    `json:"table_size"`         // 表大小(GB)
+	BigTableSizeSum int    `json:"big_table_size_sum"` // 本BU大表的总容量(GB)
+	TableSizeSum    int    `json:"table_size_sum"`     // 筛选的表的总容量(GB)
+	TablesNum       int    `json:"tables_num"`         // 大表个数
+	PoliciesNum     int    `json:"policies_num"`       // 策略个数
+	Policies        string `json:"policies"`           // 对应的策略
 }
 
 func (c *TaskStatisticService) TaskStatisticSummary(ctx *gin.Context) (any, common.ServiceCode, error) {
@@ -534,6 +536,24 @@ func (c *ClusterStatistic) ClusterStatisticDetail(ctx *gin.Context, groupBy stri
 		c.EndSize = strconv.Itoa(num)
 	}
 
+	var tableSizeByBu []models.ClusterStatistics
+	err = db.Model(models.ClusterStatistics{}).
+		Select("date, bu, SUM(table_size) as table_size").
+		Where("date >= ? AND date <= ?", c.StartDate, c.EndDate).
+		Group("date, bu").
+		Find(&tableSizeByBu).
+		Error
+	if err != nil {
+		err = fmt.Errorf("query models.ClusterStatistics from db faield, %s", err)
+		log.Error(err)
+		return nil, common.CodeServerErr, err
+	}
+
+	tableSizeByBuMap := make(map[string]int, len(tableSizeByBu))
+	for _, v := range tableSizeByBu {
+		tableSizeByBuMap[fmt.Sprintf("%s_%s", v.Date, v.Bu)] = v.TableSize
+	}
+
 	var res []models.ClusterStatistics
 	err = db.Model(models.ClusterStatistics{}).
 		Where("date >= ? AND date <= ?", c.StartDate, c.EndDate).
@@ -580,20 +600,23 @@ func (c *ClusterStatistic) ClusterStatisticDetail(ctx *gin.Context, groupBy stri
 		key := genKey(&r)
 		if val, ok := clusterMap[key]; ok {
 			val.TablesNum++
-			val.PoliciesNum += utils.CountSubString(r.Policies, ",")
+			val.PoliciesNum += utils.Ternary[int](utils.CountSubString(r.Policies, ",") > 0, 1, 0)
+			val.TableSizeSum += r.TableSize
 		} else {
 			cs := &ClusterStatisticDetail{
-				Date:        r.Date,
-				Bu:          r.Bu,
-				ClusterID:   r.ClusterID,
-				ClusterName: r.ClusterName,
-				Database:    r.Database,
-				Table:       r.Table,
-				TableSize:   r.TableSize,
-				Policies:    r.Policies,
+				Date:            r.Date,
+				Bu:              r.Bu,
+				ClusterID:       r.ClusterID,
+				ClusterName:     r.ClusterName,
+				Database:        r.Database,
+				Table:           r.Table,
+				TableSize:       r.TableSize,
+				TableSizeSum:    r.TableSize,
+				BigTableSizeSum: tableSizeByBuMap[fmt.Sprintf("%s_%s", r.Date, r.Bu)],
+				Policies:        r.Policies,
+				TablesNum:       1,
+				PoliciesNum:     utils.Ternary[int](utils.CountSubString(r.Policies, ",") > 0, 1, 0),
 			}
-			cs.TablesNum = 1
-			cs.PoliciesNum = utils.CountSubString(cs.Policies, ",")
 
 			switch groupBy {
 			case "date":

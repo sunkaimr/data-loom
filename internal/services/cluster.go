@@ -545,8 +545,8 @@ func (_ *ClusterService) RefreshClusterBigTables(ctx *gin.Context) (common.Servi
 					err = db.Model(&models.Policy{}).
 						Select("policy.id").
 						Joins("JOIN source ON policy.src_id = source.id").
-						Where("source.cluster_id =? AND source.database_name =? AND source.tables_name LIKE ?",
-							c.ClusterID, v.Database, "%"+v.Table+"%").
+						Where("policy.enable =? AND policy.govern <> ? AND source.cluster_id =? AND source.database_name =? AND source.tables_name LIKE ?",
+							true, common.GovernTypeRebuild, c.ClusterID, v.Database, "%"+v.Table+"%").
 						Scan(&res).Error
 					if err != nil {
 						log.Errorf("query models.Policy from db failed, %s", err)

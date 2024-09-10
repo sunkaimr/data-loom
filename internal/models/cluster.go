@@ -28,5 +28,5 @@ type ClusterStatistics struct {
 	Database    string `json:"database" gorm:"type:varchar(64);index:idx_database;not null;comment:库名"`
 	Table       string `json:"table" gorm:"type:varchar(64);comment:表名"`
 	TableSize   int    `json:"table_size" gorm:"type:int;comment:表大小(GB)"`
-	Policies    string `json:"policies" gorm:"type:longtext;comment:对应的策略"`
+	Policies    string `json:"policies" gorm:"type:longtext;comment:对应的策略"` // 不包含重建表的策略
 }

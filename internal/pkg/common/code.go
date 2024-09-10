@@ -117,7 +117,7 @@ var (
 	CodeTaskStatusImmutable     = ServiceCode{4000604, "当前状态的任务不可修改"}
 	CodeTaskStatusNoDelete      = ServiceCode{4000605, "当前状态的任务不可删除"}
 	CodeTaskNotReachedExecWin   = ServiceCode{4000607, "未在执行时间窗口"}
-	CodeTaskMissedExecWin       = ServiceCode{4000608, "错过本次执行时间窗口，需等待下个执行窗口。"}
+	CodeTaskMissedExecWin       = ServiceCode{4000608, "错过本次执行时间窗口，需等待下个执行窗口"}
 	CodeTaskSrcClusterConflict  = ServiceCode{4000609, "同一集群执行中的任务达到上限"}
 	CodeTaskSrcDatabaseConflict = ServiceCode{4000609, "同一库执行中的任务达到上限"}
 	CodeTaskSrcTableConflict    = ServiceCode{4000609, "同一表执行中的任务达到上限"}

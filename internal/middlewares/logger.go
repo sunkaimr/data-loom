@@ -22,13 +22,9 @@ func AddRequestID() gin.HandlerFunc {
 			c.Header(common.RequestID, requestID)
 		}
 
-		if c.Keys == nil {
-			c.Keys = make(map[string]any)
-		}
-
 		log := logger.AddFields(logger.Log, zap.String(common.RequestID, requestID))
-		c.Keys[common.LOGGER] = log
-		c.Keys[common.DB] = (&mysql.GormLogger{Log: log}).WithLog()
+		c.Set(common.LOGGER, log)
+		c.Set(common.DB, (&mysql.GormLogger{Log: log}).WithLog())
 		c.Next()
 		return
 	}

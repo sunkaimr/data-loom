@@ -725,7 +725,7 @@ func timeInExecWindows(execDate string, execTime time.Time, execWindow []byte) (
 
 	// 情况二：结束时间小于等于开始时间： 跨天了，比如：22:00:00 - 05:00:00
 	if executeWin[1] <= executeWin[0] {
-		if execDate == execTime.Format(time.DateOnly) {
+		if execDate <= execTime.Format(time.DateOnly) {
 			endTime = endTime.Add(time.Hour * 24)
 		} else {
 			startTime = startTime.Add(time.Hour * -24)

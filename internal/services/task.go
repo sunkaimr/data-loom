@@ -371,6 +371,7 @@ func UpdateTaskResult(ctx *gin.Context, c *types.TaskResultService) (*TaskServic
 			return nil, code, err
 		}
 		task.TaskResultSize = task.SrcClusterSumTableSize - tableSize
+		log.Infof("TaskResultSize(%d)MB = before(%d) - after(%d)", task.TaskResultSize, task.SrcClusterSumTableSize, tableSize)
 	} else {
 		task.TaskResultSize = c.TaskResultSize
 	}

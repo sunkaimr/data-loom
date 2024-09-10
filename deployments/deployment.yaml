@@ -91,19 +91,7 @@ data:
       taskCron: "0 9,17 * * *"
     
     workflow:
-      driver: "argo"
-      argo:
-        url: "http://argoworkflow.com"
-        token: ""
-        templates:
-          # 清空表
-          truncate: "data-loom/mysql-truncate"
-          # 清空表
-          delete: "data-loom/mysql-delete"
-          # 重建表
-          rebuild: "data-loom/mysql-rebuild-table"
-          # 归档表
-          archive: "data-loom/mysql-archive"
+      driver: "mock"
 ---
 apiVersion: v1
 kind: Service
@@ -111,7 +99,7 @@ metadata:
   labels:
     app: data-loom
   name: data-loom
-  namespace: iop-saas
+  namespace: default
 spec:
   ports:
     - name: tcp
@@ -122,3 +110,4 @@ spec:
     app: data-loom
   sessionAffinity: None
   type: ClusterIP
+

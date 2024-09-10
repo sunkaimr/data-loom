@@ -23,9 +23,8 @@ func LoadMiddlewares(r *gin.Engine) *gin.Engine {
 
 func NewGinContext(log *zap.SugaredLogger, db *gorm.DB) *gin.Context {
 	ctx := &gin.Context{}
-	ctx.Keys = make(map[string]any)
-	ctx.Keys[common.LOGGER] = log
-	ctx.Keys[common.DB] = db
+	ctx.Set(common.LOGGER, log)
+	ctx.Set(common.DB, db)
 	return ctx
 }
 
